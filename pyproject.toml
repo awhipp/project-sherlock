@@ -13,6 +13,7 @@ six = "^1.16.0"
 pandas = "^2.1.0"
 flask = "^2.3.3"
 pydantic = "^2.6.3"
+beautifulsoup4 = "^4.12.3"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"
