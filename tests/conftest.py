@@ -6,7 +6,6 @@ from datetime import timedelta
 from datetime import timezone
 
 import pytest
-
 from foresight.utils.models.forex_data import ForexData
 from foresight.utils.models.subscription_feed import SubscriptionFeed
 
