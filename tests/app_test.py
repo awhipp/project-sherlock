@@ -1,11 +1,13 @@
-"""Application test for the flask app"""
+"""Application test for the fastapi app"""
+
+from fastapi.testclient import TestClient
 
 from sherlock.app import app
 
 
-def test_home_route():
+def test_home():
     """Test the home route."""
-    with app.test_client() as client:
-        response = client.get("/")
-        assert response.status_code == 200
-        assert response.data == b"Hello, World!"
+    client = TestClient(app)
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == "Hello, World!"

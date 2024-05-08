@@ -31,6 +31,9 @@ def ensure_dir_file_name_valid(name: str) -> str:
     return name
 
 
+ROOT_PATH = "web_docs"
+
+
 def write_file(base_url: str, sub_url: str, content: str):
     """Write a text file to a given directory.
 
@@ -46,16 +49,16 @@ def write_file(base_url: str, sub_url: str, content: str):
     sub_url (str): The sub-URL of the website.
     content (str): The content to write to the file.
     """
-    if not os.path.exists("SOURCE_DOCUMENTS"):
-        os.makedirs("SOURCE_DOCUMENTS")
+    if not os.path.exists(ROOT_PATH):
+        os.makedirs(ROOT_PATH)
 
     base_url = ensure_dir_file_name_valid(base_url)
-    if not os.path.exists(f"SOURCE_DOCUMENTS{S}{base_url}"):
-        os.makedirs(f"SOURCE_DOCUMENTS{S}{base_url}")
+    if not os.path.exists(f"{ROOT_PATH}{S}{base_url}"):
+        os.makedirs(f"{ROOT_PATH}{S}{base_url}")
 
     sub_url = ensure_dir_file_name_valid(sub_url)
     with open(
-        f"SOURCE_DOCUMENTS{S}{base_url}{S}{sub_url}.txt",
+        f"{ROOT_PATH}{S}{base_url}{S}{sub_url}.txt",
         "w",
         encoding="utf-8",
     ) as file:

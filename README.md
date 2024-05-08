@@ -2,7 +2,14 @@
 
 Project which allows users to scrape website information and then use generative AI to allow users to ask questions about all the data.
 
-## CCR Focus
+## Architecture (WIP)
 
-* Help with creating a tool to scrape state websites for all data on their CCR activities and mandates.
-* Comparative analysis of state CCR data based on school district outcomes and IPEDS data.
+* Web Scraper
+**Python 3.11
+**FastAPI (Python web framework)
+**Pydantic (Python data validation)
+
+* AI Interface
+**FastAPI (Python web framework)
+**GPT4All (Generative AI)
+***[GPT4All Python bindings](https://github.com/nomic-ai/gpt4all/tree/main/gpt4all-bindings/python)
