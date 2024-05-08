@@ -3,24 +3,25 @@
 This class will recursively grab all sub-links from a given URL
 and scrape them to individual text files."""
 
-import requests
-import html2text
 import datetime
-from typing import Optional, Union, Tuple
+import io
+from io import BytesIO
+from typing import Optional
+from typing import Union
 
+import docx2txt
+import html2text
+import pandas as pd
+import requests
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
+from pypdf import PdfReader  # you can also use pypdf>=3.1.0
 from selenium import webdriver
 
-from io import BytesIO
-import docx2txt
-import requests, io
-import pandas as pd
-from pypdf import PdfReader  # you can also use pypdf>=3.1.0
-
-from sherlock.scrape_utils.metadata import Metadata
-from sherlock.file_utils.writer import write_file
 from sherlock.file_utils.file_type import FileType
+from sherlock.file_utils.writer import write_file
+from sherlock.scrape_utils.metadata import Metadata
+
 
 html2text = html2text.HTML2Text()
 html2text.ignore_links = True
@@ -72,7 +73,7 @@ class Scraper(BaseModel):
 
         if not self.base_url.startswith("http"):
             raise ValueError("URL must start with http or https.")
-        
+
     def start(self):
         """Start the scraping process."""
         self.get_page_sublinks(self.source_url)
@@ -103,7 +104,7 @@ class Scraper(BaseModel):
             page_text: str = page
         else:
             raise ValueError("Scrape result must be BeautifulSoup or str object.")
-        
+
         # Trim blank lines
         page_text = "\n".join([line for line in page_text.split("\n") if line.strip()])
 
@@ -113,13 +114,16 @@ class Scraper(BaseModel):
 
         if len(page_text) == 0:
             return
-        
-        page_text = Metadata(
-            title=url.split("/")[-1],
-            source=url,
-            file_type=file_type,
-            retrieved_date=datetime.datetime.now().strftime("%Y-%m-%d"),
-        ).to_markdown() + page_text
+
+        page_text = (
+            Metadata(
+                title=url.split("/")[-1],
+                source=url,
+                file_type=file_type,
+                retrieved_date=datetime.datetime.now().strftime("%Y-%m-%d"),
+            ).to_markdown()
+            + page_text
+        )
 
         print(f"Scraped: {url} ({len(page_text)} characters)")
 
@@ -129,12 +133,11 @@ class Scraper(BaseModel):
         if self.max_entries and len(self.links) >= self.max_entries:
             print(f"Reached maximum entries: {self.max_entries}")
             return
-        
+
         # Check if we have reached the maximum size
         if self.max_size and total_size >= self.max_size:
             print(f"Reached maximum size: {self.max_size}")
             return
-        
 
         if isinstance(page, BeautifulSoup):
             for link in page.find_all("a"):
@@ -158,12 +161,12 @@ class Scraper(BaseModel):
                     self.get_page_sublinks(link_href)
 
     @staticmethod
-    def scrape(url: str) -> Tuple[Union[str, BeautifulSoup], FileType]:
+    def scrape(url: str) -> tuple[Union[str, BeautifulSoup], FileType]:
         """Scrape the content of a given URL.
-        
+
         Args:
         url (str): The URL to scrape.
-        
+
         Returns:
         Tuple[Union[str, BeautifulSoup], str]: The scraped content and file type."""
 
@@ -172,7 +175,7 @@ class Scraper(BaseModel):
         if r.status_code != 200:
             print(f"Failed to scrape {url} with status code {r.status_code}")
             return "", FileType.HTML
-        
+
         content_type = r.headers.get("content-type")
 
         # HTML parsing
@@ -185,7 +188,7 @@ class Scraper(BaseModel):
 
             # Parse page source to BeautifulSoup for Javascript support
             return BeautifulSoup(driver.page_source, "html.parser"), FileType.HTML
-        
+
         # PDF parsing
         elif "application/pdf" in content_type:
             page_text: str = ""
@@ -194,25 +197,33 @@ class Scraper(BaseModel):
 
                 for _, page in enumerate(reader.pages):
                     page_text += page.extract_text()
-            
+
             return page_text, FileType.PDF
-        
+
         # Word Document parsing
-        elif "application/vnd.openxmlformats-officedocument.wordprocessingml.document" in content_type: 
+        elif (
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            in content_type
+        ):
             return docx2txt.process(BytesIO(r.content)), FileType.DOCX
-        
 
         # Excel Document parsing
-        elif "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" in content_type or "application/vnd.ms-excel" in content_type:
+        elif (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            in content_type
+            or "application/vnd.ms-excel" in content_type
+        ):
             return pd.read_excel(BytesIO(r.content)).to_markdown(), FileType.XLSX
-        
+
         # CSV Document parsing
         elif "text/csv" in content_type:
             return pd.read_csv(BytesIO(r.content)).to_markdown(), FileType.CSV
 
         # Unsupported
         else:
-            raise ValueError(f"URL ({url}) has an unsupported content type: {content_type}.")
+            raise ValueError(
+                f"URL ({url}) has an unsupported content type: {content_type}.",
+            )
 
 
 if __name__ == "__main__":

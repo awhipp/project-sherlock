@@ -1,9 +1,9 @@
 """Metadata model to add to the top of all documents."""
 
-
 from pydantic import BaseModel
 
 from sherlock.file_utils.file_type import FileType
+
 
 class Metadata(BaseModel):
     """Metadata model to add to the top of all documents."""
