@@ -1,17 +1,17 @@
 """Entry point for the Sherlock application.
 
-It will be a flask application that will be used to serve the web interface,
+It will be a FastAPI application that will be used to serve the web interface,
 and allow users to ask questions of the generative AI chat bot.
 """
 
-from flask import Flask
+from fastapi import FastAPI
 
 
-app = Flask(__name__)
+app = FastAPI()
 
 
 # Define a route for the default URL
-@app.route("/")
+@app.get("/")
 def home():
     """Home Route."""
     return "Hello, World!"
