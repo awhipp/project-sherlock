@@ -5,6 +5,8 @@
 version: '3.8'
 
 services:
+
+  # ! TODO - Move this to local in order to use the GPU
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -15,6 +17,11 @@ services:
     networks:
       - my_bridge_network
     restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
 
   open_webui:
     image: ghcr.io/open-webui/open-webui:main
