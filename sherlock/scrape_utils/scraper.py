@@ -127,7 +127,7 @@ class Scraper(BaseModel):
 
         print(f"Scraped: {url} ({len(page_text)} characters)")
 
-        total_size = write_file(base_url=self.base_url, sub_url=url, content=page_text)
+        total_size = write_file(url=url, content=page_text)
 
         # Check if we have reached the maximum entries
         if self.max_entries and len(self.links) >= self.max_entries:
