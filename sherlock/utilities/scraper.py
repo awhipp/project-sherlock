@@ -76,7 +76,12 @@ class Scraper(BaseModel):
 
     def start(self):
         """Start the scraping process."""
+        import time
+
+        start_time = time.time()
         self.get_page_sublinks(self.source_url)
+        print(f"Scraped {len(self.links)} pages.")
+        print(f"Elapsed time: {time.time() - start_time:.2f} seconds.")
 
     def get_page_sublinks(self, url: str):
         """Get all sub-links from a given page."""
@@ -219,11 +224,17 @@ class Scraper(BaseModel):
         elif "text/csv" in content_type:
             return pd.read_csv(BytesIO(r.content)).to_markdown(), FileType.CSV
 
+        elif (
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            in content_type
+        ):
+            print(f"Unsupported content type: {content_type}")
+            return "", FileType.PPTX
+
         # Unsupported
         else:
-            raise ValueError(
-                f"URL ({url}) has an unsupported content type: {content_type}.",
-            )
+            print(f"Unsupported content type: {content_type}")
+            return "", FileType.Unsupported
 
 
 if __name__ == "__main__":

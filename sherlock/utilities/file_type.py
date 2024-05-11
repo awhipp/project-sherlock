@@ -11,6 +11,8 @@ class FileType(Enum):
     DOCX = "Word Document (DOCX)"
     XLSX = "Excel / Spreadsheet Document (XLSX)"
     CSV = "CSV"
+    PPTX = "PowerPoint Document (PPTX)"
+    Unsupported = "Unsupported"
 
     def __str__(self):
         return self.value
