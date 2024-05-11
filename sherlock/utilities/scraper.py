@@ -18,9 +18,9 @@ from pydantic import BaseModel
 from pypdf import PdfReader  # you can also use pypdf>=3.1.0
 from selenium import webdriver
 
-from sherlock.file_utils.file_type import FileType
-from sherlock.file_utils.writer import write_file
-from sherlock.scrape_utils.metadata import Metadata
+from sherlock.utilities.file_type import FileType
+from sherlock.utilities.metadata import Metadata
+from sherlock.utilities.writer import write_file
 
 
 html2text = html2text.HTML2Text()

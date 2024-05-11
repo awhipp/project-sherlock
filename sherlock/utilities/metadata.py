@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 
-from sherlock.file_utils.file_type import FileType
+from sherlock.utilities.file_type import FileType
 
 
 class Metadata(BaseModel):

@@ -16,20 +16,20 @@ services:
       - my_bridge_network
     restart: always
 
-  open_webui:
-    image: ghcr.io/open-webui/open-webui:main
-    container_name: open-webui
-    ports:
-      - "3000:8080"
-    volumes:
-      - open-webui:/app/backend/data
-      # Map the `web_docs` folder here to `/data/docs` in the container
-      - ./web_docs/:/app/backend/data/docs/
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - my_bridge_network
-    restart: always
+  # open_webui:
+  #   image: ghcr.io/open-webui/open-webui:main
+  #   container_name: open-webui
+  #   ports:
+  #     - "3000:8080"
+  #   volumes:
+  #     - open-webui:/app/backend/data
+  #     # Map the `web_docs` folder here to `/data/docs` in the container
+  #     - ./web_docs/:/app/backend/data/docs/
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   networks:
+  #     - my_bridge_network
+  #   restart: always
 
 networks:
   my_bridge_network:
