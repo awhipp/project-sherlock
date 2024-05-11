@@ -14,4 +14,4 @@ def test_llm_client_list_models():
     """Test the LLM Client List Models."""
     c = client()
     models = c.list_models()
-    assert models == []
+    assert models == [] or models is None

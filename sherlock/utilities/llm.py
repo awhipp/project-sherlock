@@ -73,7 +73,7 @@ class OllamaClient:
 
         return all_chunks
 
-    def embed(self, text: str, model_name: str = "all-minilm"):
+    def embed(self, text: str, model_name: str = "llama3"):
         """Embed the text using the model."""
         embeddings_object = self.client.embeddings(model=model_name, prompt=text)
 
@@ -91,5 +91,13 @@ if __name__ == "__main__":
     # print(
     #     client.list_models()
     # )
-    embeddings = client.embed("Sherlock Homey.")
-    client.chat("llama3", f"Embeddings:{embeddings}, Question:What's my name?")
+    embeddings = client.embed("My name is Sherlock Homey.")
+    stream = client.client.generate(
+        model="llama3",
+        prompt="What's my name?",
+        context=embeddings,
+        stream=True,
+    )
+    for chunk in stream:
+        print(chunk["response"], end="", flush=True)
+    # client.chat("llama3", f"Embeddings:{embeddings}, Question:What's my name?")
