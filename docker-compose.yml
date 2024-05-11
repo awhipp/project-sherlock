@@ -17,11 +17,11 @@ services:
     networks:
       - my_bridge_network
     restart: always
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
+    #deploy:
+      #resources:
+        #reservations:
+          #devices:
+            #- capabilities: [gpu]
 
   # open_webui:
   #   image: ghcr.io/open-webui/open-webui:main
