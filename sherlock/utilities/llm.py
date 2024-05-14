@@ -38,10 +38,13 @@ class OllamaClient:
 
     def list_models(self):
         """List all the available models."""
-        if "models" not in self.ollama.list():
+        response = self.ollama.list()
+        if "models" not in response:
             return []
+        elif isinstance(response["models"], list):
+            return response["models"]
         else:
-            return self.ollama.list()["models"]
+            return []
 
     def get_model(self, model_name: str):
         """Get the model by name."""
