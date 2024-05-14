@@ -7,6 +7,7 @@ from typing import Union
 
 import chromadb as cdb
 import ollama as ollm
+from tqdm import tqdm
 
 
 class OllamaClient:
@@ -48,35 +49,35 @@ class OllamaClient:
 
     def get_model(self, model_name: str):
         """Get the model by name."""
-        try:
-            steam = self.ollama.pull(model_name, stream=True)
+        current_digest, bars = "", {}
+        for progress in self.ollama.pull(model_name, stream=True):
+            digest = progress.get("digest", "")
+            if digest != current_digest and current_digest in bars:
+                bars[current_digest].close()
 
-            has_completed = False
+            if not digest:
+                print(progress.get("status"))
+                continue
 
-            for message in steam:
-                if message["status"] == "pulling manifest":
-                    print(f"Pulling manifest for model {model_name}.")
-                elif "pulling" in message["status"] and "completed" in message:
-                    total = int(message["total"])
-                    current = int(message["completed"])
-                    percentage = f"{(current / total) * 100:.2f}%"
-                    if not has_completed:
-                        print(f"Downloading model {model_name}: {percentage}")
-                    if percentage == "100.00%":
-                        has_completed = True
-                elif "verifying" in message["status"]:
-                    print(f"Verifying model {model_name}.")
-                elif "writing" in message["status"]:
-                    print(f"Writing model {model_name}.")
-                elif "success" in message["status"]:
-                    print(f"Model {model_name} downloaded successfully.")
-                elif "removing any unused layers" in message["status"]:
-                    print("Cleaning up...")
+            if digest not in bars and (total := progress.get("total")):
+                bars[digest] = tqdm(
+                    total=total,
+                    desc=f"pulling {digest[7:19]}",
+                    unit="B",
+                    unit_scale=True,
+                )
 
-            return self.list_models()
+            if completed := progress.get("completed"):
+                bars[digest].update(completed - bars[digest].n)
 
-        except Exception:
-            print(f"Model {model_name} not found.")
+            current_digest = digest
+
+        return self.list_models()
+
+    def remove_model(self, model_name: str):
+        """Remove the model by name."""
+        response = self.ollama.delete(model=model_name)
+        return response["status"] == "success"
 
     def chat(self, model_name: str, text: str):
         """Chat with the model."""
