@@ -18,9 +18,9 @@ from pydantic import BaseModel
 from pypdf import PdfReader  # you can also use pypdf>=3.1.0
 from selenium import webdriver
 
-from sherlock.file_utils.file_type import FileType
-from sherlock.file_utils.writer import write_file
-from sherlock.scrape_utils.metadata import Metadata
+from sherlock.utilities.file_type import FileType
+from sherlock.utilities.metadata import Metadata
+from sherlock.utilities.writer import write_file
 
 
 html2text = html2text.HTML2Text()
@@ -76,7 +76,12 @@ class Scraper(BaseModel):
 
     def start(self):
         """Start the scraping process."""
+        import time
+
+        start_time = time.time()
         self.get_page_sublinks(self.source_url)
+        print(f"Scraped {len(self.links)} pages.")
+        print(f"Elapsed time: {time.time() - start_time:.2f} seconds.")
 
     def get_page_sublinks(self, url: str):
         """Get all sub-links from a given page."""
@@ -127,7 +132,7 @@ class Scraper(BaseModel):
 
         print(f"Scraped: {url} ({len(page_text)} characters)")
 
-        total_size = write_file(base_url=self.base_url, sub_url=url, content=page_text)
+        total_size = write_file(url=url, content=page_text)
 
         # Check if we have reached the maximum entries
         if self.max_entries and len(self.links) >= self.max_entries:
@@ -219,11 +224,17 @@ class Scraper(BaseModel):
         elif "text/csv" in content_type:
             return pd.read_csv(BytesIO(r.content)).to_markdown(), FileType.CSV
 
+        elif (
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            in content_type
+        ):
+            print(f"Unsupported content type: {content_type}")
+            return "", FileType.PPTX
+
         # Unsupported
         else:
-            raise ValueError(
-                f"URL ({url}) has an unsupported content type: {content_type}.",
-            )
+            print(f"Unsupported content type: {content_type}")
+            return "", FileType.Unsupported
 
 
 if __name__ == "__main__":
