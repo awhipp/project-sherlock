@@ -18,10 +18,15 @@ def get_commit_messages():
 
     valid_commit_messages = []
 
+    number_merges = 0
+
     for message in commit_messages:
         if "Merge pull request" in message:
-            break
-        valid_commit_messages.append(message)
+            number_merges += 1
+            if number_merges > 1:
+                break
+        if number_merges == 1 and "Merge pull request" not in message:
+            valid_commit_messages.append(message)
 
     return valid_commit_messages
 

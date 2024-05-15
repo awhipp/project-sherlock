@@ -26,6 +26,7 @@ def analyze_commit_messages(messages):
         str: The version bump type (major, minor, patch) or None if no bump is needed.
     """
     maximal_bump = "None"
+    number_merges = 0
     for message in messages:
         if message.startswith("fix:") and maximal_bump in ["None", "patch"]:
             maximal_bump = "patch"
@@ -39,7 +40,9 @@ def analyze_commit_messages(messages):
         ]:
             maximal_bump = "major"
         elif "Merge pull request" in message:
-            return maximal_bump
+            number_merges += 1
+            if number_merges > 1:
+                return maximal_bump
     return "None"
 
 
