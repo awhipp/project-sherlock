@@ -4,24 +4,24 @@ import subprocess
 
 
 def get_commit_messages():
-    """Get commit messages using git log."""
-    # Get commit messages using git log
-    commit_log = (
-        subprocess.check_output(["git", "log", "--pretty=%s"]).decode().split("\n")
-    )
-    # Filter out empty lines
-    commit_messages = [msg.strip() for msg in commit_log if msg.strip()]
+    """Get the commit messages from the current branch.
 
-    # Only get the commit messages between the last two merge requests
-    merge_request_count = 0
+    Returns:
+        list: A list of commit messages.
+    """
+    result = subprocess.run(
+        ["git", "log", "--pretty=format:%s"],
+        stdout=subprocess.PIPE,
+        check=True,
+    )
+    commit_messages = result.stdout.decode("utf-8").split("\n")
+
     valid_commit_messages = []
-    for _, message in enumerate(commit_messages):
-        if merge_request_count == 2:
-            break
+
+    for message in commit_messages:
         if "Merge pull request" in message:
-            merge_request_count += 1
-        else:
-            valid_commit_messages.append(message)
+            break
+        valid_commit_messages.append(message)
 
     return valid_commit_messages
 
