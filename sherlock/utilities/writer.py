@@ -10,6 +10,24 @@ from sherlock.utilities.file_type import FileType
 S = os.sep
 
 
+def remove_prefix(name: str) -> str:
+    """Removes http(s) and www from name
+
+    Args:
+    name (str): The name of the directory or file.
+
+    Returns:
+    str: The valid directory or file name.
+    """
+    if "https" in name:
+        name = name.replace("https://", "")
+    if "http" in name:
+        name = name.replace("http://", "")
+    if "www." in name:
+        name = name.replace("www.", "")
+    return name
+
+
 def path_to_valid_name(name: str) -> str:
     """Ensure that URL path is valid for a directory or file name.
 
@@ -28,7 +46,7 @@ def path_to_valid_name(name: str) -> str:
 
     # Strip leading and trailing whitespaces, and normalize spaces
     valid_filename = valid_filename.strip()
-    valid_filename = re.sub(r"\s+", "", valid_filename)
+    # valid_filename = re.sub(r"\s+", "", valid_filename)
 
     return valid_filename
 
@@ -36,16 +54,21 @@ def path_to_valid_name(name: str) -> str:
 ROOT_PATH = "web_docs"
 
 
-def write_file(url: str, content: Union[str, bytes], file_type: FileType) -> int:
+def write_file(
+    collection_name: str,
+    url: str,
+    content: Union[str, bytes],
+    file_type: FileType,
+    depth: int,
+) -> int:
     """Write a text file to a given subdirectory based on the URL.
 
-    For instance if the URL is https://www.example.com/page/example/help.txt
-    * `The help.txt` file will be saved in `web_docs` under `example.com/page/example`.
-
     Args:
+        collection_name (str): The name of the collection.
         url (str): The URL of the website.
         content (Union[str, bytes]): The content to write to the file.
         file_type (FileType): The type of file to write.
+        depth (int): The depth of the URL.
 
     Returns:
         int: The number of characters written to the file.
@@ -53,39 +76,32 @@ def write_file(url: str, content: Union[str, bytes], file_type: FileType) -> int
     if not os.path.exists(ROOT_PATH):
         os.makedirs(ROOT_PATH)
 
-    if "https" in url:
-        url = url.replace("https://", "")
-    if "http" in url:
-        url = url.replace("http://", "")
-    if "www." in url:
-        url = url.replace("www.", "")
+    url = remove_prefix(url)
+    collection_name = remove_prefix(collection_name)
+    collection_name = path_to_valid_name(collection_name)
+
+    landing_path = ROOT_PATH + S + collection_name
+
+    if not os.path.exists(landing_path):
+        os.makedirs(landing_path)
 
     url_split = url.split("/")
 
-    running_path = ROOT_PATH
-    for idx, part in enumerate(url_split):
-        if idx == len(url_split) - 1:
-            break
-        running_path = f"{running_path}{S}{part}"
-        if not os.path.exists(running_path):
-            os.makedirs(running_path)
-
-    # ! TODO - Figure out a better naming convention
     if file_type == FileType.HTML:
-        file_path = f"{running_path}{S}{path_to_valid_name(url_split[-1])}.md"
+        file_path = f"{landing_path}{S}{path_to_valid_name(url_split[-1])}.md"
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
     elif file_type == FileType.DOCX:
-        file_path = f"{running_path}{S}{path_to_valid_name(url_split[-1])}.docx"
+        file_path = f"{landing_path}{S}{path_to_valid_name(url_split[-1])}.docx"
         with open(file_path, "wb") as f:
             f.write(content)
     elif file_type == FileType.PDF:
-        file_path = f"{running_path}{S}{path_to_valid_name(url_split[-1])}.pdf"
+        file_path = f"{landing_path}{S}{path_to_valid_name(url_split[-1])}.pdf"
         with open(file_path, "wb") as f:
             f.write(content)
     else:
         raise ValueError(f"Invalid file type: {file_type}")
 
-    print(f"Scraped: {url} ({file_type} - {len(content)} characters)")
+    print(f"Scraped: {url} ({file_type} - {len(content)} characters - Depth: {depth})")
 
     return len(content)
