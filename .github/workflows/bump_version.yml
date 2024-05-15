@@ -43,37 +43,29 @@ jobs:
 
       - name: Analyze Commit Messages and Bump Version
         run: |
-          # Custom script to analyze commit messages and determine version bump
-          ## Stored in .github/get_version_bump_type.py
-          ## Assuming the script outputs the determined version bump as 'patch', 'minor', or 'major'
-          ## Only None if there is no relevant commits.
-          version_bump=$(python .github/get_version_bump_type.py)
-
-          # Custom script to retrieve commit messages for release
-          ## Stored in .github/valid_git_history.py
-          valid_git_history=$(python .github/valid_git_history.py)
-
+          version_bump=$(python analyze_commits.py)
           if [ "$version_bump" == "patch" ]; then
             poetry version patch
           elif [ "$version_bump" == "minor" ]; then
             poetry version minor
           elif [ "$version_bump" == "major" ]; then
             poetry version major
-          else
-            echo "Invalid version bump type ($version_bump). Skipping."
-            exit 0
           fi
 
           # Commit the version change to pyproject.toml
-          git add pyproject.toml
-          git config --global user.email "GitHubActionRunner@fake.email.com"
-          git config --global user.name "Github Action Runner"
-          git commit -m "chore: Bump version ($version_bump)"
-          git push origin main
+          # Only if version_bump is not "None"
+          if [ "$version_bump" != "None" ]; then
+            valid_git_history=$(python .github/valid_git_history.py)
 
-          # Tag the commit with the new version
-          git tag $(poetry version -s)
-          git push origin $(poetry version -s)
+            git add pyproject.toml
+            git config --global user.email "GitHubActionRunner@fake.email.com"
+            git config --global user.name "Github Action Runner"
+            git commit -m "chore: Bump version ($version_bump)"
+            git push origin main
 
-          # Create a release
-          gh release create $(poetry version -s) -t "Release $(poetry version -s)" -n "$valid_git_history"
+            # Tag the commit with the new version
+            git tag $(poetry version -s)
+            git push origin $(poetry version -s)
+
+            # Create a release
+            gh release create $(poetry version -s) -t "Release $(poetry version -s)" -n "$valid_git_history"
