@@ -43,7 +43,7 @@ jobs:
 
       - name: Analyze Commit Messages and Bump Version
         run: |
-          version_bump=$(python analyze_commits.py)
+          version_bump=$(python .github/analyze_commits.py)
           if [ "$version_bump" == "patch" ]; then
             poetry version patch
           elif [ "$version_bump" == "minor" ]; then
