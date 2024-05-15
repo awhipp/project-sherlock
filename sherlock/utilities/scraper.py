@@ -4,18 +4,13 @@ This class will recursively grab all sub-links from a given URL
 and scrape them to individual text files."""
 
 import datetime
-import io
-from io import BytesIO
 from typing import Optional
 from typing import Union
 
-import docx2txt
 import html2text
-import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
-from pypdf import PdfReader  # you can also use pypdf>=3.1.0
 from selenium import webdriver
 
 from sherlock.utilities.file_type import FileType
@@ -42,8 +37,6 @@ class Scraper(BaseModel):
     source_url: str
     base_url: Optional[str]
     links: dict[str, Optional[str]]
-    max_entries: Optional[int]
-    max_size: Optional[int]
     ignore_values: list[str]
 
     def __init__(
@@ -51,8 +44,6 @@ class Scraper(BaseModel):
         source_url: str,
         base_url: Optional[str] = None,
         links: dict[str, Optional[str]] = {},
-        max_entries: Optional[int] = None,
-        max_size: Optional[int] = None,
         ignore_values: list[str] = [],
     ):
         """Initialize the Scraper class."""
@@ -60,8 +51,6 @@ class Scraper(BaseModel):
             source_url=source_url,
             base_url=base_url,
             links={},
-            max_entries=None,
-            max_size=None,
             ignore_values=ignore_values,
         )
 
@@ -105,17 +94,30 @@ class Scraper(BaseModel):
 
         if isinstance(page, BeautifulSoup):
             page_text: str = html2text.handle(str(page))
-        elif isinstance(page, str):
-            page_text: str = page
+        elif isinstance(page, bytes):
+            if file_type == FileType.PDF:
+                # Write to PDF file
+                self.links[url] = write_file(
+                    url=url,
+                    content=page,
+                    file_type=FileType.PDF,
+                )
+                return
+            elif file_type == FileType.DOCX:
+                # Write to DOCX file
+                self.links[url] = write_file(
+                    url=url,
+                    content=page,
+                    file_type=FileType.DOCX,
+                )
+                return
         else:
-            raise ValueError("Scrape result must be BeautifulSoup or str object.")
+            raise ValueError(
+                f"Scrape result must be BeautifulSoup or bytes object (received: {type(page)}).",
+            )
 
         # Trim blank lines
         page_text = "\n".join([line for line in page_text.split("\n") if line.strip()])
-
-        # Check if its a PDF page
-
-        self.links[url] = len(page_text)
 
         if len(page_text) == 0:
             return
@@ -130,19 +132,11 @@ class Scraper(BaseModel):
             + page_text
         )
 
-        print(f"Scraped: {url} ({len(page_text)} characters)")
-
-        total_size = write_file(url=url, content=page_text)
-
-        # Check if we have reached the maximum entries
-        if self.max_entries and len(self.links) >= self.max_entries:
-            print(f"Reached maximum entries: {self.max_entries}")
-            return
-
-        # Check if we have reached the maximum size
-        if self.max_size and total_size >= self.max_size:
-            print(f"Reached maximum size: {self.max_size}")
-            return
+        self.links[url] = write_file(
+            url=url,
+            content=page_text,
+            file_type=FileType.HTML,
+        )
 
         if isinstance(page, BeautifulSoup):
             for link in page.find_all("a"):
@@ -166,14 +160,14 @@ class Scraper(BaseModel):
                     self.get_page_sublinks(link_href)
 
     @staticmethod
-    def scrape(url: str) -> tuple[Union[str, BeautifulSoup], FileType]:
+    def scrape(url: str) -> tuple[Union[bytes, BeautifulSoup], FileType]:
         """Scrape the content of a given URL.
 
         Args:
         url (str): The URL to scrape.
 
         Returns:
-        Tuple[Union[str, BeautifulSoup], str]: The scraped content and file type."""
+        tuple: The scraped content and file type."""
 
         r = requests.get(url, timeout=10)
 
@@ -196,21 +190,14 @@ class Scraper(BaseModel):
 
         # PDF parsing
         elif "application/pdf" in content_type:
-            page_text: str = ""
-            with io.BytesIO(r.content) as open_pdf_file:
-                reader = PdfReader(open_pdf_file)
-
-                for _, page in enumerate(reader.pages):
-                    page_text += page.extract_text()
-
-            return page_text, FileType.PDF
+            return r.content, FileType.PDF
 
         # Word Document parsing
         elif (
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             in content_type
         ):
-            return docx2txt.process(BytesIO(r.content)), FileType.DOCX
+            return r.content, FileType.DOCX
 
         # Excel Document parsing
         elif (
@@ -218,11 +205,13 @@ class Scraper(BaseModel):
             in content_type
             or "application/vnd.ms-excel" in content_type
         ):
-            return pd.read_excel(BytesIO(r.content)).to_markdown(), FileType.XLSX
+            print(f"Unsupported content type: {content_type}")
+            return "", FileType.XLSX
 
         # CSV Document parsing
         elif "text/csv" in content_type:
-            return pd.read_csv(BytesIO(r.content)).to_markdown(), FileType.CSV
+            print(f"Unsupported content type: {content_type}")
+            return "", FileType.CSV
 
         elif (
             "application/vnd.openxmlformats-officedocument.presentationml.presentation"
@@ -244,6 +233,7 @@ if __name__ == "__main__":
 
     URL = "https://www.cde.state.co.us/postsecondary/icap"
     # URL = "https://www.cde.state.co.us/cdereval/2021-2022chronicabsenteeismbydistrict"
+    # URL = "https://www.cde.state.co.us/educatoreffectiveness/randafactsheet"
 
     IGNORE_SUBVALUES = [
         "cde_calendar/",
@@ -254,9 +244,10 @@ if __name__ == "__main__":
     ]
 
     if os.path.exists("web_docs"):
-        shutil.rmtree("web_docs")
-
-    # file_max = 1024 * 1024 * 25  # 25 MB
+        # Remove everything but the folder
+        for item in os.listdir("web_docs"):
+            if os.path.isdir(f"web_docs{os.sep}{item}"):
+                shutil.rmtree(f"web_docs{os.sep}{item}")
 
     scraper = Scraper(source_url=URL, ignore_values=IGNORE_SUBVALUES)
 
