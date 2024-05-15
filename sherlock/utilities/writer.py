@@ -2,6 +2,9 @@
 
 import os
 import re
+from typing import Union
+
+from sherlock.utilities.file_type import FileType
 
 
 S = os.sep
@@ -33,17 +36,19 @@ def path_to_valid_name(name: str) -> str:
 ROOT_PATH = "web_docs"
 
 
-def write_file(url: str, content: str) -> int:
+def write_file(url: str, content: Union[str, bytes], file_type: FileType) -> int:
     """Write a text file to a given subdirectory based on the URL.
 
     For instance if the URL is https://www.example.com/page/example/help.txt
     * `The help.txt` file will be saved in `web_docs` under `example.com/page/example`.
 
     Args:
-    url (str): The URL of the website.
-    content (str): The content to write to the file.
+        url (str): The URL of the website.
+        content (Union[str, bytes]): The content to write to the file.
+        file_type (FileType): The type of file to write.
 
-    Returns the total file size for the base_url directory.
+    Returns:
+        int: The number of characters written to the file.
     """
     if not os.path.exists(ROOT_PATH):
         os.makedirs(ROOT_PATH)
@@ -65,8 +70,22 @@ def write_file(url: str, content: str) -> int:
         if not os.path.exists(running_path):
             os.makedirs(running_path)
 
-    file_path = f"{running_path}{S}{path_to_valid_name(url_split[-1])}.txt"
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(content)
+    # ! TODO - Figure out a better naming convention
+    if file_type == FileType.HTML:
+        file_path = f"{running_path}{S}{path_to_valid_name(url_split[-1])}.md"
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(content)
+    elif file_type == FileType.DOCX:
+        file_path = f"{running_path}{S}{path_to_valid_name(url_split[-1])}.docx"
+        with open(file_path, "wb") as f:
+            f.write(content)
+    elif file_type == FileType.PDF:
+        file_path = f"{running_path}{S}{path_to_valid_name(url_split[-1])}.pdf"
+        with open(file_path, "wb") as f:
+            f.write(content)
+    else:
+        raise ValueError(f"Invalid file type: {file_type}")
 
-    return 0
+    print(f"Scraped: {url} ({file_type} - {len(content)} characters)")
+
+    return len(content)
