@@ -66,6 +66,7 @@ jobs:
             # Tag the commit with the new version
             git tag $(poetry version -s)
             git push origin $(poetry version -s)
+          fi
 
             # Create a release
             gh release create $(poetry version -s) -t "Release $(poetry version -s)" -n "$valid_git_history"
