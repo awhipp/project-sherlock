@@ -18,12 +18,20 @@ Project which allows users to scrape website information and then use generative
 ### Start up Open Web UI and Ollama
 
 ```bash
-docker-compose up -d
+docker-compose up -d                            # To run on CPU
+docker-compose -f docker-compose-gpu.yml up -d  # To run on GPU
 ```
+
+### Setup NVIDIA Container Toolkit
+
+Important if you want to leverage your GPUs for the Ollama container.
+
+*[NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+**If using windows you will need your Docker Desktop to enable your WSL integration
 
 ### Register and Login
 
-* URL: http://localhost:3000
+* URL: `http://localhost:3000`
 * First registration gets admin access.
 
 ### Settings / Models / Documents Setup
@@ -35,7 +43,7 @@ docker-compose up -d
 * User > Settings > Images
 **Add Image Generation Base URL (!TODO)
 * Documents > Document Settings
-**Embedding Model Engine: Ollama (or your choice)
+**Embedding Model Engine (i.e. `all-MiniLM`)
 **Chunk Params > PDF Extract Images > On
 
 
