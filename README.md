@@ -5,13 +5,13 @@ Project which allows users to scrape website information and then use generative
 ## Architecture (WIP)
 
 * Web Scraper
-**Python 3.11
-**FastAPI (Python web framework)
-**Pydantic (Python data validation)
+    * Python 3.11
+    * FastAPI (Python web framework)
+    * Pydantic (Python data validation)
 
 * Query Interface
-**[Open Web UI](https://docs.openwebui.com/)
-**[Ollama](https://ollama.com/)
+    * [Open Web UI](https://docs.openwebui.com/)
+    * [Ollama](https://ollama.com/)
 
 ## How to use
 
@@ -37,14 +37,14 @@ Important if you want to leverage your GPUs for the Ollama container.
 ### Settings / Models / Documents Setup
 
 * User > Settings > General > Advanced Settings
-**Tweak these accordingly based on desired performance
+    * Tweak these accordingly based on desired performance
 * User > Settings > Models
-**Download a Model (i.e. `llama3:latest`)
+    * Download a Model (i.e. `llama3:latest`)
 * User > Settings > Images
-**Add Image Generation Base URL (!TODO)
+    * Add Image Generation Base URL (!TODO)
 * Documents > Document Settings
-**Embedding Model Engine (i.e. `all-MiniLM`)
-**Chunk Params > PDF Extract Images > On
+    * Embedding Model Engine (i.e. `all-MiniLM`)
+    * Chunk Params > PDF Extract Images > On
 
 
 ## Docker Commands
