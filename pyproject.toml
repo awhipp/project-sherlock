@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sherlock"
-version = "0.7.0"
+version = "0.8.0"
 description = "A tool that allows users to scrape and analyze website data using a generative AI chat bot."
 authors = ["awhipp"]
 readme = "README.md"
